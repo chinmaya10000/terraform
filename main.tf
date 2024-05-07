@@ -71,3 +71,21 @@ resource "aws_default_security_group" "default-sg" {
     Name: "${var.env_prefix}-default-sg"
   }
 }
+
+data "aws_ami" "latest-ubuntu" {
+  most_recent = true
+  owners = ["amazon"]
+
+  filter {
+    name = "name"
+    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"]
+  }
+  filter {
+    name = "virtualization-type"
+    values = ["hvm"]
+  }
+}
+
+output "aws_ami_id" {
+  value = data.aws_ami.latest-ubuntu
+}
