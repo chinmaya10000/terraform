@@ -115,7 +115,7 @@ resource "aws_instance" "myapp-server" {
     type = "ssh"
     host = self.public_ip
     user = "ubuntu"
-    private_key = file("var.private_key_location")
+    private_key = file(var.private_key_location)
   }
 
   provisioner "remote-exec" {
