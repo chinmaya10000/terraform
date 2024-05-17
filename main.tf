@@ -111,8 +111,6 @@ resource "aws_instance" "myapp-server" {
   key_name = aws_key_pair.ssh-key.key_name
 
   tags = {
-    tags = {
     Name: "${var.env_prefix}-server"
-  }
   }
 }
