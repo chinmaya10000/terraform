@@ -9,6 +9,7 @@ variable my_ip {}
 variable env_prefix {}
 variable public_key_location {}
 variable instance_type {}
+variable ssh_key_private {}
 
 resource "aws_vpc" "myapp-vpc" {
   cidr_block = var.vpc_cidr_block
@@ -94,6 +95,10 @@ output "aws_ami_id" {
   value = data.aws_ami.latest_amazon_linux.id
 }
 
+output "ec2_public_ip" {
+  value = aws_instance.myapp-server.public_ip
+}
+
 resource "aws_key_pair" "ssh-key" {
   key_name = "server-key"
   public_key = file(var.public_key_location)
@@ -113,8 +118,9 @@ resource "aws_instance" "myapp-server" {
   tags = {
     Name: "${var.env_prefix}-server"
   }
-}
 
-output "ec2_public_ip" {
-  value = aws_instance.myapp-server.public_ip
+  provisioner "local-exec" {
+    working_dir = "/home/ec2-user/terraform/ansible"
+    command = "ansible-playbook --inventory ${self.public_ip}, --private-key ${var.ssh_key_private} --user ec2-user deploy-docker.yaml"
+  }
 }
