@@ -67,7 +67,7 @@ resource "aws_default_security_group" "default-sg" {
     to_port = 80
     from_port = 80
     protocol = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    security_groups = [aws_security_group.alb-sg.id]
   }
   egress {
     to_port = 0
@@ -134,4 +134,80 @@ resource "aws_instance" "myapp-server2" {
 
 output "ec2_public_ip_server2" {
   value = aws_instance.myapp-server2.public_ip
+}
+
+resource "aws_security_group" "alb-sg" {
+  vpc_id = aws_vpc.my-vpc.id
+
+  ingress {
+    to_port = 80
+    from_port = 80
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  egress {
+    to_port = 0
+    from_port = 0
+    protocol = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name: "${var.env_prefix}-alb-sg"
+  }
+}
+
+resource "aws_lb" "myapp-alb" {
+  name = "DemoALB"
+  internal = false 
+  load_balancer_type = "application"
+  security_groups = [aws_security_group.alb-sg.id]
+  subnets = [aws_subnet.sub1.id, aws_subnet.sub2.id]
+
+  tags = {
+    Name: "${var.env_prefix}-alb"
+  }
+}
+
+resource "aws_lb_target_group" "myapp-target-group" {
+  name = "demo-tg-alb"
+  port = 80
+  protocol = "HTTP"
+  vpc_id = aws_vpc.my-vpc.id
+
+  health_check {
+    path = "/"
+    port = "traffic-port"
+  }
+
+  tags = {
+    Name: "${var.env_prefix}-tg-alb"
+  }
+}
+
+resource "aws_lb_target_group_attachment" "server1-attachment" {
+  target_group_arn = aws_lb_target_group.myapp-target-group.arn
+  target_id = aws_instance.myapp-server1.id
+  port = 80
+}
+
+resource "aws_lb_target_group_attachment" "server2-attachment" {
+  target_group_arn = aws_lb_target_group.myapp-target-group.arn
+  target_id = aws_instance.myapp-server2.id
+  port = 80
+}
+
+resource "aws_lb_listener" "myapp-listener" {
+  load_balancer_arn = aws_lb.myapp-alb.arn 
+  port = "80"
+  protocol = "HTTP"
+
+  default_action {
+    target_group_arn = aws_lb_target_group.myapp-target-group.arn 
+    type = "forward"
+  }
+}
+
+output "alb_dns_name" {
+  value = aws_lb.myapp-alb.dns_name
 }
