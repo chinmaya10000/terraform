@@ -1,0 +1,9 @@
+variable vpc_cidr_block {}
+variable env_prefix {}
+variable subnet1_cidr_block {}
+variable subnet2_cidr_block {}
+variable avail_zone1 {}
+variable avail_zone2 {}
+variable my_ip {}
+variable public_key_location {}
+variable instance_type {}
