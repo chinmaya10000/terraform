@@ -2,22 +2,17 @@ provider "aws" {
   region = "us-east-2"
 }
 
-variable vpc_cidr_block {}
-variable private_subnet_cidr_blocks {}
-variable public_subnet_cidr_blocks {}
+data "aws_availability_zones" "available" {}
 
-data "aws_availability_zones" "azs" {}
-
-module "myapp-vpc" {
+module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "5.8.1"
+  version = "5.12.1"
 
-  name = "myapp-vpc"
+  name = "my-vpc"
   cidr = var.vpc_cidr_block
-
-  azs             = data.aws_availability_zones.azs.names
+  azs = data.aws_availability_zones.available.names
   private_subnets = var.private_subnet_cidr_blocks
-  public_subnets  = var.public_subnet_cidr_blocks
+  public_subnets = var.public_subnet_cidr_blocks
 
   enable_nat_gateway = true
   single_nat_gateway = true
